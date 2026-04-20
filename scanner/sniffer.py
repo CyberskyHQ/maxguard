@@ -69,7 +69,7 @@ def save_results(filename="scan_results.json"):
     print(f"Total packets captured: {len(captured_packets)}")
     print(f"Total violations found: {sum(1 for p in captured_packets if p['pci_violation'])}")
 
-def start_sniffing(packet_count=100):
+def start_sniffing(packet_count=300):
     print(f"Starting Max-Guard scan on interface: {INTERFACE}")
     print(f"Capturing {packet_count} packets...")
     print("Press Ctrl+C to stop early\n")
@@ -81,4 +81,4 @@ def start_sniffing(packet_count=100):
         save_results()
 
 if __name__ == "__main__":
-    start_sniffing(packet_count=100)
+    start_sniffing(packet_count=300)
