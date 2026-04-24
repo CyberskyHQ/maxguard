@@ -340,7 +340,7 @@ if voice_enabled:
     with st.spinner("Generating voice briefing..."):
         summary_text = result["analysis"].split('\n\n')[0]
         audio_bytes = get_voice_response(summary_text)
-        st.audio(audio_bytes, format="audio/mp3", autoplay=True
+        st.audio(audio_bytes, format="audio/mp3", autoplay=True)
 
 if IS_CLOUD:
     st.sidebar.markdown("### Upload Scan Results")
