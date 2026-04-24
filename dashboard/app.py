@@ -26,6 +26,8 @@ if "latest_voice_text" not in st.session_state:
     st.session_state.latest_voice_text = ""
 if "latest_voice_audio" not in st.session_state:
     st.session_state.latest_voice_audio = None
+if "latest_scan_meta" not in st.session_state:
+    st.session_state.latest_scan_meta = None
     
 def listen_for_command():
     r = sr.Recognizer()
@@ -125,6 +127,43 @@ def build_voice_briefing(result: dict, packets: list[dict] | None, mode: str) ->
         return f"{intro} {first_paragraph}"
     return f"{intro} I have the analysis ready."
 
+
+def infer_scan_type(packets: list[dict] | None) -> str:
+    packets = packets or []
+    if any(packet.get("requested_site") for packet in packets):
+        return "Website Scan"
+    return "Network Scan"
+
+
+def build_risk_recommendation(result: dict, packets: list[dict] | None) -> str:
+    packets = packets or []
+    severity = result.get("severity", {})
+    affected_devices = result.get("affected_devices", [])
+    requested_sites = sorted(
+        {
+            packet.get("requested_site")
+            for packet in packets
+            if packet.get("requested_site")
+        }
+    )
+
+    if severity.get("overall_score", 0) >= 8 and affected_devices:
+        return (
+            f"Prioritize immediate review of device {affected_devices[0]['ip']} and isolate any insecure services "
+            "before the next validation cycle."
+        )
+
+    if requested_sites and result.get("total_violations", 0) > 0:
+        return (
+            "Re-run the targeted website scan after validating outbound traffic paths and confirm whether the flagged "
+            "destinations are expected business activity."
+        )
+
+    if result.get("total_violations", 0) > 0:
+        return "Review the investigation guides, validate the flagged protocols, and remediate the highest severity findings first."
+
+    return "No urgent issues were detected. Document the clean result and keep scheduled scans running for continued assurance."
+
 load_dotenv()
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -181,6 +220,20 @@ st.markdown("""
         border-left: 4px solid #3B8BD4;
         padding-left: 12px;
         margin: 20px 0 10px 0;
+    }
+    .assistant-note {
+        background: linear-gradient(135deg, rgba(59,139,212,0.16), rgba(29,158,117,0.12));
+        border: 1px solid rgba(59,139,212,0.35);
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin: 8px 0 16px 0;
+    }
+    .assistant-note-title {
+        font-size: 0.9rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        opacity: 0.8;
+        margin-bottom: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -323,6 +376,41 @@ def render_overview_metrics(packets, result):
     col3.metric("Affected Devices", devices)
     col4.metric("Severity Score", f"{score}/10")
     col5.metric("Threat Level", result["threat_level"])
+
+
+def render_scan_context_cards(packets, result):
+    scan_type = infer_scan_type(packets)
+    requested_sites = sorted(
+        {
+            packet.get("requested_site")
+            for packet in packets
+            if packet.get("requested_site")
+        }
+    )
+    timestamps = [packet.get("timestamp") for packet in packets if packet.get("timestamp")]
+    last_scan_time = max(timestamps) if timestamps else datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    recommendation = build_risk_recommendation(result, packets)
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Scan Type", scan_type)
+    col2.metric("Target Sites", str(len(requested_sites)) if requested_sites else "0")
+    col3.metric("Last Scan", last_scan_time)
+    col4.metric("Next Action", "Review" if result["total_violations"] else "Monitor")
+
+    if requested_sites:
+        st.markdown(
+            f"**Requested Sites:** {', '.join(requested_sites)}"
+        )
+
+    st.markdown(
+        f"""
+        <div class="assistant-note">
+            <div class="assistant-note-title">Risk Recommendation</div>
+            <div>{recommendation}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 def render_charts(packets, result):
     df = pd.DataFrame(packets)
@@ -509,7 +597,16 @@ def display_results(packets):
     st.session_state.result = result
     st.session_state.latest_analysis = result
     st.session_state.latest_packets = packets
+    st.session_state.latest_scan_meta = {
+        "scan_type": infer_scan_type(packets),
+        "last_scan_time": max(
+            [packet.get("timestamp") for packet in packets if packet.get("timestamp")],
+            default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        ),
+    }
 
+    render_scan_context_cards(packets, result)
+    st.divider()
     render_overview_metrics(packets, result)
     st.divider()
     render_charts(packets, result)
@@ -634,8 +731,15 @@ if voice_enabled and latest_result and get_voice_response and (
         st.warning(f"Voice playback unavailable right now: {exc}")
 
 if voice_enabled and st.session_state.get("latest_voice_text"):
-    st.markdown("**Voice Briefing Script**")
-    st.info(st.session_state["latest_voice_text"])
+    st.markdown(
+        f"""
+        <div class="assistant-note">
+            <div class="assistant-note-title">Voice Briefing Script</div>
+            <div>{st.session_state["latest_voice_text"]}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 if voice_enabled and st.session_state.get("latest_voice_audio"):
     st.markdown("**Voice Playback**")
