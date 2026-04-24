@@ -6,6 +6,24 @@ from dotenv import load_dotenv
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+VOICE_PROFILES = {
+    "Professional Female": {
+        "voice": "nova",
+    },
+    "Professional Male": {
+        "voice": "alloy",
+    },
+    "Friendly Analyst": {
+        "voice": "shimmer",
+    },
+    "Light Humor": {
+        "voice": "nova",
+    },
+    "Angry Customer": {
+        "voice": "alloy",
+    },
+}
+
 def listen_for_command():
     """Captures voice input from the mic."""
     recognizer = sr.Recognizer()
@@ -18,11 +36,12 @@ def listen_for_command():
         except:
             return None
 
-def get_voice_response(text):
+def get_voice_response(text, profile_name="Professional Female"):
     """Converts AI text analysis to speech bytes for Streamlit."""
+    profile = VOICE_PROFILES.get(profile_name, VOICE_PROFILES["Professional Female"])
     response = client.audio.speech.create(
         model="tts-1",
-        voice="nova", # Professional 'Siri-like' voice
-        input=text[:4000] # Limit to avoid API errors
+        voice=profile["voice"],
+        input=text[:4000]
     )
     return response.content
