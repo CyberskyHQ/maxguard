@@ -9,7 +9,19 @@ import csv
 import io
 from datetime import datetime
 from dotenv import load_dotenv
-from voice_engine import listen_for_command, get_voice_response
+import speech_recognition as sr
+
+def listen_for_command():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        st.info("Listening for command....")
+        r.adjust_for_ambient_noise(source, duration=1)
+        audio = r.listen(source)
+    try:
+        command = r.recognize_google(audio)
+        return command.lower()
+    except Exception:
+        return ""
 
 load_dotenv()
 
