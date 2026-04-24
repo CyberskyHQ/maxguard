@@ -18,9 +18,7 @@ if 'result' not in st.session_state:
     except FileNotFoundError:
         st.session_state.result = {"analysis": "Waiting for scan...."}
         result = st.session_state.result
-if st.button("Run AI Analysis"):
     
-
 def listen_for_command():
     r = sr.Recognizer()
     with sr.Microphone() as source:
