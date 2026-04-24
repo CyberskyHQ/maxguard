@@ -9,6 +9,7 @@ import csv
 import io
 from datetime import datetime
 from dotenv import load_dotenv
+from voice_engine import listen_for_command, get_voice_response
 
 load_dotenv()
 
@@ -51,6 +52,17 @@ st.divider()
 
 st.sidebar.image("https://img.shields.io/badge/Max--Guard-v1.0-blue", width=150)
 st.sidebar.title("Scan Controls")
+st.divider()
+st.sidebar.subheader(" 🔊 Voice Assistance ")
+voice_enabled = st.sidebar.toggle("Enable Siri-style Responses", value=True)
+
+if st.sidebar.button("Give Voice Command"):
+    with st.spinner("Listening...."):
+        cmd = listen_for_commad()
+        if cmd and "scan" in cmd:
+            st.sidebar.success(f"Command received: {cmd}")
+            packets = run_local_scan(packet_count)
+            display_results(packets)
 st.sidebar.markdown(f"**Mode:** {'☁️ Cloud' if IS_CLOUD else '💻 Local'}")
 st.sidebar.divider()
 
@@ -323,6 +335,12 @@ def display_results(packets):
     render_ai_analysis(result)
     st.divider()
     render_exports(packets, result)
+
+if voice_enabled:
+    with st.spinner("Generating voice briefing..."):
+        summary_text = result["analysis"].split('\n\n')[0]
+        audio_bytes = get_voice_response(summary_text)
+        st.audio(audio_bytes, format="audio/mp3", autoplay=True
 
 if IS_CLOUD:
     st.sidebar.markdown("### Upload Scan Results")
