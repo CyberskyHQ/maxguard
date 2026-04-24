@@ -11,6 +11,16 @@ from datetime import datetime
 from dotenv import load_dotenv
 import speech_recognition as sr
 
+if 'result' not in st.session_state:
+    try:
+        with open ('scan_results.json', 'r') as f:
+            st.session_state.result = json.load(f)
+    except FileNotFoundError:
+        st.session_state.result = {"analysis": "Waiting for scan...."}
+        result = st.session_state.result
+if st.button("Run AI Analysis"):
+    
+
 def listen_for_command():
     r = sr.Recognizer()
     with sr.Microphone() as source:
@@ -70,11 +80,15 @@ voice_enabled = st.sidebar.toggle("Enable Siri-style Responses", value=True)
 
 if st.sidebar.button("Give Voice Command"):
     with st.spinner("Listening...."):
-        cmd = listen_for_commad()
+        cmd = listen_for_command()
         if cmd and "scan" in cmd:
             st.sidebar.success(f"Command received: {cmd}")
             packets = run_local_scan(packet_count)
+            st.session_state.result = {
+                "analysis": "Scan complete. No major threats detected.", "Packets": packets
+            }
             display_results(packets)
+            st.rerun()
 st.sidebar.markdown(f"**Mode:** {'☁️ Cloud' if IS_CLOUD else '💻 Local'}")
 st.sidebar.divider()
 
