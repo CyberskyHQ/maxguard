@@ -243,7 +243,6 @@ voice_mode = st.sidebar.selectbox(
 )
 voice_persona = st.sidebar.selectbox(
     "Voice Persona",
-    list(VOICE_PROFILES.keys()) or ["Professional Female"],
     index=0,
     help="Choose how the spoken briefing should sound.",
 )
