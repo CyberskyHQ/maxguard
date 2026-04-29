@@ -183,9 +183,6 @@ def load_voice_response_helper():
         getattr(module, "VOICE_PROFILES", {}),
     )
 
-
-
-if voice_helper:
     get_voice_response, VOICE_PROFILES = voice_helper
 else:
     get_voice_response, VOICE_PROFILES = None, {}
