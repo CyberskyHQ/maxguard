@@ -100,8 +100,8 @@ def render_severity_gauge(score):
         }
     ))
     fig.update_layout(
-        height=250,
-        margin=dict(t=40, b=20, l=40, r=40),
+        height=280,
+        margin=dict(t=60, b=20, l=40, r=40),
         paper_bgcolor="rgba(0,0,0,0)",
         font_color="white",
         font=dict(size=12)
