@@ -241,8 +241,6 @@ voice_mode = st.sidebar.selectbox(
     ["Executive", "Technical", "Remediation", "Website Scan", "AI Summary"],
     index=0,
 )
-voice_persona = st.sidebar.selectbox(
-    "Voice Persona",
     index=0,
     help="Choose how the spoken briefing should sound.",
 )
