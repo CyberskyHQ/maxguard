@@ -7,11 +7,8 @@ import os
 import sys
 import csv
 import io
-import importlib.util
 from datetime import datetime
 from dotenv import load_dotenv
-import speech_recognition as sr
-
 if 'result' not in st.session_state:
     try:
         with open ('scan_results.json', 'r') as f:
