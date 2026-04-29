@@ -183,10 +183,6 @@ def load_voice_response_helper():
         getattr(module, "VOICE_PROFILES", {}),
     )
 
-    get_voice_response, VOICE_PROFILES = voice_helper
-else:
-    get_voice_response, VOICE_PROFILES = None, {}
-
 IS_CLOUD = os.getenv("STREAMLIT_CLOUD", "false").lower() == "true"
 
 st.set_page_config(
