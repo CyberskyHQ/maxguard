@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-INTERFACE = "Wi-Fi"
+INTERFACE = "ens33"
 
 PCI_PORTS = {
     21:  "FTP - Unencrypted file transfer (PCI DSS 4.2.1)",
