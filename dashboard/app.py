@@ -173,7 +173,6 @@ def load_voice_response_helper():
     if not os.path.exists(voice_module_path):
         return None
 
-    spec = importlib.util.spec_from_file_location("voice_engine", voice_module_path)
     if spec is None or spec.loader is None:
         return None
 
