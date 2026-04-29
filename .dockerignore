@@ -8,3 +8,7 @@ __pycache__/
 *.txt
 !requirements.txt
 README.md
+desktop.ini
+lab_scan_results.json
+*.json
+!requirements.txt
