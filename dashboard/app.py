@@ -83,7 +83,7 @@ def render_severity_gauge(score):
         domain={"x": [0, 1], "y": [0, 1]},
         title={"text": "Severity Score", "font": {"size": 16}},
         gauge={
-            "axis": {"range": [0, 10], "tickwidth": 1},
+            "axis": {"range": [0, 10], "tickwidth": 1, "tickcolor": "white", "nticks": 11},
             "bar": {"color": "#3B8BD4"},
             "steps": [
                 {"range": [0, 3],  "color": "#1a4a2e"},
@@ -99,8 +99,13 @@ def render_severity_gauge(score):
             }
         }
     ))
-    fig.update_layout(height=250, margin=dict(t=40, b=0, l=20, r=20),
-                      paper_bgcolor="rgba(0,0,0,0)", font_color="white")
+    fig.update_layout(
+        height=250,
+        margin=dict(t=40, b=20, l=40, r=40),
+        paper_bgcolor="rgba(0,0,0,0)",
+        font_color="white",
+        font=dict(size=12)
+    )
     st.plotly_chart(fig, use_container_width=True)
 
 def render_overview_metrics(packets, result):
