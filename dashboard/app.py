@@ -36,6 +36,31 @@ st.markdown("""
         padding-left: 12px;
         margin: 20px 0 10px 0;
     }
+    .ir-step-box {
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        border: 1px solid;
+    }
+    .ir-step-title {
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+    .ir-step-desc {
+        font-size: 12px;
+        margin-bottom: 8px;
+        opacity: 0.75;
+    }
+    .ir-step-body {
+        font-size: 13px;
+        color: #c0c0c0;
+        line-height: 1.65;
+    }
+    .ir-step-body ul { margin: 4px 0 0 18px; padding: 0; }
+    .ir-step-body li { margin-bottom: 4px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -47,6 +72,7 @@ st.sidebar.title("Scan Controls")
 st.sidebar.markdown(f"**Mode:** {'☁️ Cloud' if IS_CLOUD else '💻 Local'}")
 st.sidebar.divider()
 
+
 def run_local_scan(packet_count):
     from scanner.sniffer import start_sniffing, captured_packets
     captured_packets.clear()
@@ -54,9 +80,11 @@ def run_local_scan(packet_count):
         start_sniffing(packet_count=packet_count)
     return captured_packets
 
+
 def load_packets_from_file(uploaded_file):
     content = uploaded_file.read().decode("utf-8")
     return json.loads(content)
+
 
 def render_threat_badge(level):
     colors = {
@@ -75,6 +103,7 @@ def render_threat_badge(level):
         </span>
     </div>
     """, unsafe_allow_html=True)
+
 
 def render_severity_gauge(score):
     fig = go.Figure(go.Indicator(
@@ -108,25 +137,31 @@ def render_severity_gauge(score):
     )
     st.plotly_chart(fig, use_container_width=True)
 
+
 def render_overview_metrics(packets, result):
     col1, col2, col3, col4, col5 = st.columns(5)
-    total = result["total_packets"]
+    total      = result["total_packets"]
     violations = result["total_violations"]
-    rate = round((violations / total * 100), 1) if total > 0 else 0
-    score = result["severity"]["overall_score"]
-    devices = len(result["affected_devices"])
+    rate       = round((violations / total * 100), 1) if total > 0 else 0
+    score      = result["severity"]["overall_score"]
+    devices    = len(result["affected_devices"])
 
-    col1.metric("Total Packets", total)
-    col2.metric("PCI Violations", violations, delta=f"{rate}% of traffic" if violations > 0 else None, delta_color="inverse")
+    col1.metric("Total Packets",    total)
+    col2.metric("PCI Violations",   violations,
+                delta=f"{rate}% of traffic" if violations > 0 else None,
+                delta_color="inverse")
     col3.metric("Affected Devices", devices)
-    col4.metric("Severity Score", f"{score}/10")
-    col5.metric("Threat Level", result["threat_level"])
+    col4.metric("Severity Score",   f"{score}/10")
+    col5.metric("Threat Level",     result["threat_level"])
+
 
 def render_charts(packets, result):
     df = pd.DataFrame(packets)
 
-    st.markdown('<div class="section-header"><h3>Traffic Analysis</h3></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header"><h3>Traffic Analysis</h3></div>',
+                unsafe_allow_html=True)
 
+    # ── Row 1: Protocol pie  |  Severity gauge ────────────────────────────────
     col1, col2 = st.columns(2)
 
     with col1:
@@ -144,6 +179,7 @@ def render_charts(packets, result):
     with col2:
         render_severity_gauge(result["severity"]["overall_score"])
 
+    # ── Row 2: Violation timeline  |  Top Talkers ─────────────────────────────
     col3, col4 = st.columns(2)
 
     with col3:
@@ -165,7 +201,7 @@ def render_charts(packets, result):
                 st.info("No violations to plot on timeline.")
 
     with col4:
-        patterns = result.get("patterns", {})
+        patterns    = result.get("patterns", {})
         top_talkers = patterns.get("top_talkers", [])
         if top_talkers:
             talkers_df = pd.DataFrame(top_talkers)
@@ -179,24 +215,58 @@ def render_charts(packets, result):
             fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="white")
             st.plotly_chart(fig, use_container_width=True)
 
-    top_ports = patterns.get("top_ports", [])
-    if top_ports:
-        ports_df = pd.DataFrame(top_ports)
+    # ── Row 3: Violations by Protocol ─────────────────────────────────────────
+    # Replaces the old "Top Destination Ports" full-width bar chart.
+    # Raw port numbers (21, 23, 80) carry no meaning to a stakeholder or professor.
+    # Protocol names (FTP, Telnet, HTTP) map directly to PCI-DSS requirements and
+    # communicate risk at a glance. Color-coded by severity level.
+    violations_df = df[df["pci_violation"] == True].copy() if "pci_violation" in df.columns else pd.DataFrame()
+
+    if not violations_df.empty and "protocol" in violations_df.columns:
+        viol_proto = violations_df["protocol"].value_counts().reset_index()
+        viol_proto.columns = ["Protocol", "Violations"]
+
+        PROTO_COLORS = {
+            "FTP":    "#E53E3E",
+            "TELNET": "#C53030",
+            "HTTP":   "#DD6B20",
+            "RDP":    "#D69E2E",
+            "IMAP":   "#B7791F",
+            "POP3":   "#B7791F",
+            "TCP":    "#E53E3E",
+            "UDP":    "#DD6B20",
+        }
+        color_map = {
+            row["Protocol"]: PROTO_COLORS.get(row["Protocol"].upper(), "#718096")
+            for _, row in viol_proto.iterrows()
+        }
+
         fig = px.bar(
-            ports_df, x="port", y="count",
-            title="Top Destination Ports",
-            labels={"port": "Port", "count": "Packet Count"},
-            color="count",
-            color_continuous_scale="Reds"
+            viol_proto, x="Protocol", y="Violations",
+            title="PCI-DSS Violations by Protocol",
+            labels={"Protocol": "Protocol / Service", "Violations": "Violation Count"},
+            color="Protocol",
+            color_discrete_map=color_map,
+            text="Violations"
         )
-        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="white")
+        fig.update_traces(textposition="outside")
+        fig.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            font_color="white",
+            title_font_color="white",
+            showlegend=False
+        )
         st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.success("✅ No PCI-DSS violations detected — violations by protocol chart not applicable.")
+
 
 def render_violations_table(packets):
     df = pd.DataFrame(packets)
     violations_df = df[df["pci_violation"] == True]
     if not violations_df.empty:
-        st.markdown('<div class="section-header"><h3>PCI-DSS Violations Detected</h3></div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header"><h3>PCI-DSS Violations Detected</h3></div>',
+                    unsafe_allow_html=True)
         st.dataframe(
             violations_df[["timestamp", "src_ip", "dst_ip", "protocol", "dst_port", "violation_detail"]],
             use_container_width=True
@@ -204,11 +274,13 @@ def render_violations_table(packets):
     else:
         st.success("No PCI-DSS violations detected in this scan.")
 
+
 def render_affected_devices(result):
     devices = result.get("affected_devices", [])
     if not devices:
         return
-    st.markdown('<div class="section-header"><h3>Affected Devices</h3></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header"><h3>Affected Devices</h3></div>',
+                unsafe_allow_html=True)
     for device in devices:
         with st.expander(f"{device['ip']} — {device['device_type']} — {device['violation_count']} violations"):
             st.markdown(f"**IP Address:** `{device['ip']}`")
@@ -218,11 +290,13 @@ def render_affected_devices(result):
             for v in device["violations"]:
                 st.markdown(f"- {v}")
 
+
 def render_investigation_guides(result):
     guides = result.get("investigation_guides", {})
     if not guides:
         return
-    st.markdown('<div class="section-header"><h3>Investigation & Remediation Guides</h3></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header"><h3>Investigation & Remediation Guides</h3></div>',
+                unsafe_allow_html=True)
     st.markdown("Step-by-step guidance for each violation found in this scan.")
     for protocol, guide in guides.items():
         with st.expander(f"How to investigate and fix: {protocol}"):
@@ -237,13 +311,174 @@ def render_investigation_guides(result):
             for step in guide["how_to_fix"]:
                 st.markdown(f"- {step}")
 
+
+def render_ir_section(result):
+    """
+    5-step AI Incident Response Advisor.
+    Sits directly below the AI analysis output inside render_ai_analysis().
+    Sends actual detected threat data to GPT-4o-mini and returns a plan
+    structured around: Identify, Assess Risk, Contain, Eradicate, Recover.
+    """
+    st.markdown('<div class="section-header"><h3>🚨 AI Incident Response Advisor</h3></div>',
+                unsafe_allow_html=True)
+    st.markdown(
+        "Based on the threats detected in this scan, the AI generates a concrete "
+        "5-step incident response plan tailored to the exact violations found."
+    )
+
+    # Reference strip showing all 5 steps
+    IR_META = [
+        ("01", "Identify",    "#E67E22",
+         "Review alerts, monitor for prevented activity, and hunt for malicious behavior."),
+        ("02", "Assess Risk", "#E74C3C",
+         "Determine impact based on targeted asset and notify relevant partners."),
+        ("03", "Contain",     "#8E44AD",
+         "Stop the attack from spreading or getting worse."),
+        ("04", "Eradicate",   "#C0392B",
+         "Remove the threat, disable unauthorized access, notify state/federal partners."),
+        ("05", "Recover",     "#27AE60",
+         "Fix architecture weaknesses and update Security Awareness Training."),
+    ]
+    ref_cols = st.columns(5)
+    for i, (num, name, color, desc) in enumerate(IR_META):
+        with ref_cols[i]:
+            st.markdown(f"""
+<div style="background:{color}15; border:1px solid {color}44; border-radius:8px;
+            padding:10px; text-align:center; min-height:110px;">
+    <div style="font-size:10px; font-weight:700; color:{color};
+                text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Step {num}</div>
+    <div style="font-size:13px; font-weight:700; color:{color}; margin-bottom:6px;">{name}</div>
+    <div style="font-size:10px; color:#888; line-height:1.4;">{desc[:65]}...</div>
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    col_a, col_b = st.columns([4, 1])
+    with col_a:
+        extra = st.text_input(
+            "Add extra context (optional)",
+            placeholder="e.g. violations on POS terminal at register 3, scan ran at 2:14 AM...",
+            key="ir_extra_context"
+        )
+    with col_b:
+        st.markdown("<br>", unsafe_allow_html=True)
+        run_ir = st.button("🛡️ Generate IR Plan", type="primary", key="ir_run_btn")
+
+    if run_ir:
+        threat_context = (
+            f"Threat level: {result.get('threat_level', 'UNKNOWN')}\n"
+            f"Total violations: {result.get('total_violations', 0)}\n"
+            f"Violation types detected: {', '.join(result.get('violation_types', []))}\n"
+            f"Affected devices: {len(result.get('affected_devices', []))}\n"
+            f"AI analysis summary: {result.get('analysis', '')[:600]}"
+        )
+        if extra:
+            threat_context += f"\nAdditional context: {extra}"
+
+        with st.spinner("Generating 5-step incident response plan..."):
+            try:
+                from openai import OpenAI
+                client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+                ir_prompt = f"""You are a PCI-DSS v4.0 incident response expert for a retail environment.
+A network security scanner (Max-Guard) detected the following:
+
+{threat_context}
+
+Generate a 5-step incident response plan. Respond ONLY in valid JSON, no markdown, no preamble.
+
+Required structure:
+{{
+  "identify":    {{ "actions": ["...", "...", "...", "..."] }},
+  "assess_risk": {{ "actions": ["...", "...", "..."] }},
+  "contain":     {{ "actions": ["...", "...", "...", "..."] }},
+  "eradicate":   {{ "actions": ["...", "...", "..."] }},
+  "recover":     {{ "actions": ["...", "...", "...", "..."] }}
+}}
+
+Rules:
+- Actions must be specific to the exact violation types detected (FTP, HTTP, Telnet, etc.)
+- Reference the PCI-DSS v4.0 requirement number in at least one action per step
+- Actions must be immediately executable by a retail security team, not generic advice
+- Each step should have 3 to 4 actions"""
+
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a PCI-DSS incident response expert. Respond only in valid JSON."},
+                        {"role": "user",   "content": ir_prompt}
+                    ],
+                    max_tokens=1000,
+                    temperature=0.2
+                )
+                raw     = response.choices[0].message.content.strip()
+                clean   = raw.replace("```json", "").replace("```", "").strip()
+                ir_plan = json.loads(clean)
+                st.session_state["ir_plan"] = ir_plan
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"IR plan generation failed: {str(e)}")
+
+    # ── Render IR plan cards ───────────────────────────────────────────────────
+    if "ir_plan" in st.session_state:
+        ir = st.session_state["ir_plan"]
+
+        STEPS = [
+            ("identify",    "Step 1: Identify",    "#E67E22",
+             "Review alerts, monitor for prevented activity, and hunt for malicious behavior."),
+            ("assess_risk", "Step 2: Assess Risk",  "#E74C3C",
+             "Determine the potential impact based on the targeted asset (device, application, data, or department) and notify relevant partners."),
+            ("contain",     "Step 3: Contain",      "#8E44AD",
+             "Stop the attack from spreading or getting worse."),
+            ("eradicate",   "Step 4: Eradicate",    "#C0392B",
+             "Remove the threat (e.g. viruses), disable unauthorized access, and notify state/federal/utility partners."),
+            ("recover",     "Step 5: Recover",      "#27AE60",
+             "Identify architecture weaknesses, evaluate new technologies or process changes, and incorporate lessons learned into Security Awareness Training."),
+        ]
+
+        st.markdown("---")
+        st.markdown("#### AI-Generated Incident Response Plan")
+        st.caption(
+            f"Tailored to this scan — Threat Level: **{result.get('threat_level', '?')}** | "
+            f"Violations: **{result.get('total_violations', 0)}** | PCI-DSS v4.0 references included."
+        )
+
+        for key, label, color, description in STEPS:
+            step_data    = ir.get(key, {})
+            actions      = step_data.get("actions", [])
+            actions_html = "".join([f"<li>{a}</li>" for a in actions])
+
+            st.markdown(f"""
+<div class="ir-step-box" style="background:{color}12; border-color:{color}55;">
+    <div class="ir-step-title" style="color:{color};">{label}</div>
+    <div class="ir-step-desc" style="color:#999;">{description}</div>
+    <div class="ir-step-body"><ul>{actions_html}</ul></div>
+</div>
+""", unsafe_allow_html=True)
+
+        st.caption(
+            "For authorized networks only. All IR actions should be reviewed "
+            "by a qualified security professional before execution."
+        )
+
+
 def render_ai_analysis(result):
-    st.markdown('<div class="section-header"><h3>AI Threat Analysis (GPT-4o-mini)</h3></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header"><h3>AI Threat Analysis (GPT-4o-mini)</h3></div>',
+                unsafe_allow_html=True)
     render_threat_badge(result["threat_level"])
     st.markdown(result["analysis"])
 
+    st.divider()
+
+    # IR Advisor lives directly below the AI analysis output
+    render_ir_section(result)
+
+
 def render_exports(packets, result):
-    st.markdown('<div class="section-header"><h3>Export Reports</h3></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header"><h3>Export Reports</h3></div>',
+                unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -295,6 +530,7 @@ FULL AI ANALYSIS:
             mime="text/plain"
         )
 
+
 def display_results(packets):
     if not packets:
         st.warning("No packets captured.")
@@ -308,7 +544,8 @@ def display_results(packets):
     render_charts(packets, result)
     st.divider()
 
-    st.markdown('<div class="section-header"><h3>All Captured Packets</h3></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header"><h3>All Captured Packets</h3></div>',
+                unsafe_allow_html=True)
     st.dataframe(pd.DataFrame(packets), use_container_width=True)
     st.divider()
 
@@ -318,10 +555,12 @@ def display_results(packets):
     st.divider()
     render_investigation_guides(result)
     st.divider()
-    render_ai_analysis(result)
+    render_ai_analysis(result)   # IR section lives inside here
     st.divider()
     render_exports(packets, result)
 
+
+# ── Entrypoint ─────────────────────────────────────────────────────────────────
 if IS_CLOUD:
     st.sidebar.markdown("### Upload Scan Results")
     uploaded_file = st.sidebar.file_uploader("Upload scan_results.json", type="json")
