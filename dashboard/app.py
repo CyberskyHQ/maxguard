@@ -78,12 +78,36 @@ def run_local_scan(packet_count):
     captured_packets.clear()
     with st.spinner(f"Scanning network... capturing {packet_count} packets"):
         start_sniffing(packet_count=packet_count)
+    # Step 5.6 - Auto-save results to scan_results.json after every live scan.
+    # This file is what gets uploaded to the cloud dashboard for remote analysis.
+    try:
+        save_data = {
+            "packets":   list(captured_packets),
+            "scan_time": datetime.now().isoformat(),
+            "total":     len(captured_packets)
+        }
+        with open("scan_results.json", "w") as f:
+            json.dump(save_data, f, indent=2, default=str)
+        st.sidebar.success("scan_results.json saved automatically.")
+    except Exception as e:
+        st.sidebar.warning(f"Auto-save failed: {str(e)}")
     return captured_packets
 
 
 def load_packets_from_file(uploaded_file):
+    # Step 5.5 — Cloud mode JSON handling
+    # Accepts two formats:
+    #   Format A (list):  [ {packet}, {packet}, ... ]           <- sniffer.py default output
+    #   Format B (dict):  { "packets": [...], "scan_time": ... } <- exported from dashboard
     content = uploaded_file.read().decode("utf-8")
-    return json.loads(content)
+    data = json.loads(content)
+    if isinstance(data, list):
+        return data
+    elif isinstance(data, dict) and "packets" in data:
+        return data["packets"]
+    else:
+        st.error("Unrecognised JSON format. File must be a packet list or contain a 'packets' key.")
+        return []
 
 
 def render_threat_badge(level):
