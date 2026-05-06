@@ -77,8 +77,6 @@ def start_sniffing(packet_count=300):
         sniff(iface=INTERFACE, prn=packet_callback, count=packet_count, store=False)
     except KeyboardInterrupt:
         print("\nScan stopped by user.")
-    finally:
-        save_results()
 
 if __name__ == "__main__":
     start_sniffing(packet_count=300)
