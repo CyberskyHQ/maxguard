@@ -26,47 +26,224 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    .violation-critical { color: #ff4444; font-weight: bold; }
-    .violation-high { color: #ff8800; font-weight: bold; }
-    .violation-medium { color: #ffcc00; font-weight: bold; }
-    .violation-low { color: #4499ff; font-weight: bold; }
-    .violation-none { color: #44ff88; font-weight: bold; }
-    .section-header {
-        border-left: 4px solid #3B8BD4;
-        padding-left: 12px;
-        margin: 20px 0 10px 0;
-    }
-    .ir-step-box {
-        border-radius: 8px;
-        padding: 14px 16px;
-        margin-bottom: 10px;
-        border: 1px solid;
-    }
-    .ir-step-title {
-        font-weight: 700;
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 6px;
-    }
-    .ir-step-desc {
-        font-size: 12px;
-        margin-bottom: 8px;
-        opacity: 0.75;
-    }
-    .ir-step-body {
-        font-size: 13px;
-        color: #c0c0c0;
-        line-height: 1.65;
-    }
-    .ir-step-body ul { margin: 4px 0 0 18px; padding: 0; }
-    .ir-step-body li { margin-bottom: 4px; }
+/* ── Global ── */
+.main .block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 3rem !important;
+    max-width: 1400px !important;
+}
+
+/* ── Main header card ── */
+.main-header {
+    background: linear-gradient(135deg, #0c1a36 0%, #080f20 100%);
+    border: 1px solid #1e3a5f;
+    border-radius: 14px;
+    padding: 22px 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+.main-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #3B8BD4, #00d4ff, #3B8BD4, transparent);
+}
+.main-header-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.3px;
+}
+.main-header-sub {
+    font-size: 13px;
+    color: #475569;
+    margin: 0;
+}
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-right: 6px;
+    margin-top: 12px;
+}
+.badge-blue   { background:#1e3a5f; color:#60a5fa; }
+.badge-green  { background:#142e22; color:#4ade80; }
+.badge-purple { background:#2a1a4a; color:#c084fc; }
+.badge-amber  { background:#3a2400; color:#fbbf24; }
+
+/* ── Section headers ── */
+.section-header {
+    border-left: 3px solid #3B8BD4;
+    padding-left: 14px;
+    margin: 28px 0 14px 0;
+}
+.section-header h3 {
+    color: #e2e8f0 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+/* ── Violation severity colors ── */
+.violation-critical { color: #f43f5e !important; font-weight: 700; }
+.violation-high     { color: #f97316 !important; font-weight: 700; }
+.violation-medium   { color: #eab308 !important; font-weight: 700; }
+.violation-low      { color: #3B8BD4 !important; font-weight: 700; }
+.violation-none     { color: #22c55e !important; font-weight: 700; }
+
+/* ── Metric cards ── */
+[data-testid="stMetric"] {
+    background: linear-gradient(135deg, #0c1a3680 0%, #080f2080 100%) !important;
+    border: 1px solid #1e3a5f !important;
+    border-radius: 10px !important;
+    padding: 16px 18px !important;
+    transition: border-color 0.2s;
+}
+[data-testid="stMetric"]:hover { border-color: #3B8BD4 !important; }
+[data-testid="stMetricLabel"] > div {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    color: #475569 !important;
+}
+[data-testid="stMetricValue"] > div {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: #e2e8f0 !important;
+    font-family: 'Consolas', 'Fira Code', monospace !important;
+}
+
+/* ── Buttons ── */
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #1e3d7d 0%, #2563a8 100%) !important;
+    border: 1px solid #3B8BD4 !important;
+    color: #bfdbfe !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+}
+.stButton > button[kind="primary"]:hover {
+    box-shadow: 0 0 18px rgba(59, 139, 212, 0.35) !important;
+    transform: translateY(-1px) !important;
+}
+.stButton > button:not([kind="primary"]) {
+    border: 1px solid #1e3a5f !important;
+    border-radius: 8px !important;
+}
+
+/* ── Expanders ── */
+[data-testid="stExpander"] {
+    border: 1px solid #1e3a5f !important;
+    border-radius: 8px !important;
+}
+[data-testid="stExpander"]:hover { border-color: #3B8BD4 !important; }
+
+/* ── Dataframe ── */
+[data-testid="stDataFrame"] {
+    border: 1px solid #1e3a5f !important;
+    border-radius: 8px !important;
+}
+
+/* ── Divider ── */
+hr { border-color: #1e3a5f !important; }
+
+/* ── IR Step cards ── */
+.ir-step-box {
+    border-radius: 10px;
+    padding: 16px 18px 14px 18px;
+    margin-bottom: 10px;
+    border: 1px solid;
+}
+.ir-step-title {
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 6px;
+}
+.ir-step-desc {
+    font-size: 12px;
+    margin-bottom: 10px;
+    opacity: 0.6;
+    font-style: italic;
+}
+.ir-step-body {
+    font-size: 13px;
+    color: #cbd5e1;
+    line-height: 1.7;
+}
+.ir-step-body ul { margin: 4px 0 0 20px; padding: 0; }
+.ir-step-body li { margin-bottom: 5px; }
+
+/* ── Welcome cards ── */
+.welcome-card {
+    background: linear-gradient(135deg, #0c1a36 0%, #080f20 100%);
+    border: 1px solid #1e3a5f;
+    border-radius: 12px;
+    padding: 20px;
+    height: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.welcome-card:hover {
+    border-color: #3B8BD4;
+    box-shadow: 0 4px 20px rgba(59,139,212,0.12);
+}
+.welcome-card-icon  { font-size: 26px; margin-bottom: 10px; }
+.welcome-card-title { font-size: 12px; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.8px; }
+.welcome-card-desc  { font-size: 12px; color: #475569; line-height: 1.6; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #080f20; }
+::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3B8BD4; }
+
+/* ── Pulse animation for CRITICAL threat ── */
+@keyframes threat-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
+    50%       { box-shadow: 0 0 0 10px rgba(244, 63, 94, 0); }
+}
+.threat-critical-pulse { animation: threat-pulse 2s ease-in-out infinite; }
+
+/* ── Code inline ── */
+code {
+    background: #0c1a36 !important;
+    color: #60a5fa !important;
+    border: 1px solid #1e3a5f !important;
+    border-radius: 4px !important;
+    padding: 1px 6px !important;
+    font-size: 12px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🛡️ Max-Guard: PCI-DSS Network Security Scanner")
-st.markdown("**AI-driven network security scanner for retail PCI-DSS compliance** | Sprint 2 | CCSU")
-st.divider()
+st.markdown("""
+<div class="main-header">
+    <div style="display:flex; align-items:center; gap:16px;">
+        <div style="font-size:42px; line-height:1;">🛡️</div>
+        <div>
+            <div class="main-header-title">Max-Guard</div>
+            <div class="main-header-sub">PCI-DSS Network Security Scanner &nbsp;·&nbsp; CCSU</div>
+        </div>
+    </div>
+    <div style="margin-top:12px;">
+        <span class="badge badge-blue">AI-Powered</span>
+        <span class="badge badge-green">PCI-DSS v4.0</span>
+        <span class="badge badge-purple">GPT-4o-mini</span>
+        <span class="badge badge-amber">Scapy</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 st.sidebar.title("Scan Controls")
 st.sidebar.markdown(f"**Mode:** {'☁️ Cloud' if IS_CLOUD else '💻 Local'}")
@@ -86,7 +263,7 @@ def run_local_scan(packet_count):
             "scan_time": datetime.now().isoformat(),
             "total":     len(captured_packets)
         }
-        with open("scan_results.json", "w") as f:
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scan_results.json"), "w") as f:
             json.dump(save_data, f, indent=2, default=str)
         st.sidebar.success("scan_results.json saved automatically.")
     except Exception as e:
@@ -112,21 +289,35 @@ def load_packets_from_file(uploaded_file):
 
 def render_threat_badge(level):
     colors = {
-        "CRITICAL": "#ff4444",
-        "HIGH":     "#ff8800",
-        "MEDIUM":   "#ffcc00",
-        "LOW":      "#4499ff",
-        "NONE":     "#44ff88"
+        "CRITICAL": "#f43f5e",
+        "HIGH":     "#f97316",
+        "MEDIUM":   "#eab308",
+        "LOW":      "#3B8BD4",
+        "NONE":     "#22c55e"
     }
-    color = colors.get(level, "#888888")
+    icons = {
+        "CRITICAL": "🔴",
+        "HIGH":     "🟠",
+        "MEDIUM":   "🟡",
+        "LOW":      "🔵",
+        "NONE":     "🟢"
+    }
+    color = colors.get(level, "#64748b")
+    icon  = icons.get(level, "⚪")
+    pulse = "threat-critical-pulse" if level == "CRITICAL" else ""
     st.markdown(f"""
-    <div style="display:inline-block; background:{color}22; border:2px solid {color};
-    border-radius:8px; padding:8px 24px; margin:10px 0;">
-        <span style="color:{color}; font-size:24px; font-weight:bold;">
-            {level}
-        </span>
+<div class="{pulse}" style="display:inline-flex; align-items:center; gap:14px;
+     background:{color}18; border:2px solid {color}66;
+     border-radius:12px; padding:14px 28px; margin:10px 0;">
+    <span style="font-size:28px;">{icon}</span>
+    <div>
+        <div style="font-size:10px; color:{color}99; font-weight:700;
+                    text-transform:uppercase; letter-spacing:1.2px; margin-bottom:2px;">Threat Level</div>
+        <div style="color:{color}; font-size:22px; font-weight:800;
+                    letter-spacing:2px; font-family:monospace;">{level}</div>
     </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
 
 def render_severity_gauge(score):
@@ -610,11 +801,79 @@ else:
         display_results(packets)
     else:
         st.markdown("""
-        ### Welcome to Max-Guard
-        **Two ways to use this dashboard:**
-        - **Live Scan:** Click *Start Live Scan* in the sidebar to capture real network traffic
-        - **Upload Results:** Upload a previously saved `scan_results.json` file
+<div style="text-align:center; padding:40px 0 24px 0;">
+    <div style="font-size:52px; margin-bottom:12px;">🛡️</div>
+    <div style="font-size:26px; font-weight:700; color:#e2e8f0; margin-bottom:8px;">Welcome to Max-Guard</div>
+    <div style="font-size:14px; color:#475569; max-width:540px; margin:0 auto; line-height:1.7;">
+        AI-driven PCI-DSS v4.0 compliance scanner for retail environments.
+        Capture live network traffic, detect violations in real time, and get
+        AI-powered incident response plans.
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-        This tool scans your network for PCI-DSS v4.0 violations and uses GPT-4o-mini
-        to generate a professional compliance analysis report.
-        """)
+        c1, c2, c3, c4 = st.columns(4)
+        features = [
+            ("🔍", "Live Capture",     "Real-time packet sniffing with Scapy. Set packet count and click Start Live Scan."),
+            ("⚡", "AI Analysis",      "GPT-4o-mini analyzes each scan and flags PCI-DSS violations instantly."),
+            ("📋", "Compliance Export","Export JSON, CSV, and executive summary reports for audit or review."),
+            ("🚨", "IR Advisor",       "AI-generated 5-step incident response plan tailored to your exact threats."),
+        ]
+        for col, (icon, title, desc) in zip([c1, c2, c3, c4], features):
+            with col:
+                st.markdown(f"""
+<div class="welcome-card">
+    <div class="welcome-card-icon">{icon}</div>
+    <div class="welcome-card-title">{title}</div>
+    <div class="welcome-card-desc">{desc}</div>
+</div>
+""", unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        qs_col1, qs_col2 = st.columns(2)
+        with qs_col1:
+            st.markdown("""
+<div style="background:linear-gradient(135deg,#0c1a36,#080f20);border:1px solid #1e3a5f;
+            border-radius:10px;padding:20px 22px;height:100%;">
+    <div style="color:#3B8BD4;font-size:10px;font-weight:700;text-transform:uppercase;
+                letter-spacing:1.2px;margin-bottom:12px;">🖥️ Live Scan</div>
+    <div style="color:#94a3b8;font-size:13px;line-height:1.7;">
+        1. Run as <strong style="color:#e2e8f0;">Administrator</strong><br>
+        2. Set packet count with the slider<br>
+        3. Click <strong style="color:#3B8BD4;">Start Live Scan</strong> in the sidebar
+    </div>
+</div>
+""", unsafe_allow_html=True)
+        with qs_col2:
+            st.markdown("""
+<div style="background:linear-gradient(135deg,#0c1a36,#080f20);border:1px solid #1e3a5f;
+            border-radius:10px;padding:20px 22px;height:100%;">
+    <div style="color:#22c55e;font-size:10px;font-weight:700;text-transform:uppercase;
+                letter-spacing:1.2px;margin-bottom:12px;">☁️ Upload Results</div>
+    <div style="color:#94a3b8;font-size:13px;line-height:1.7;">
+        1. Export <code>scan_results.json</code> from a local scan<br>
+        2. Use the <strong style="color:#e2e8f0;">sidebar uploader</strong><br>
+        3. Analysis runs automatically on upload
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("""
+<div style="background:linear-gradient(135deg,#0c1a36,#080f20);border:1px solid #1e3a5f;
+            border-radius:10px;padding:18px 22px;">
+    <div style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;
+                letter-spacing:1.2px;margin-bottom:14px;">PCI-DSS Violations Detected</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <span style="background:#3a0f0f;color:#f87171;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:700;font-family:monospace;">FTP &nbsp;:21</span>
+        <span style="background:#3a0f0f;color:#f87171;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:700;font-family:monospace;">Telnet :23</span>
+        <span style="background:#3a1a00;color:#fb923c;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:700;font-family:monospace;">HTTP &nbsp;:80</span>
+        <span style="background:#3a1a00;color:#fb923c;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:700;font-family:monospace;">HTTP-Alt :8080</span>
+        <span style="background:#3a2400;color:#fbbf24;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:700;font-family:monospace;">POP3 :110</span>
+        <span style="background:#3a2400;color:#fbbf24;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:700;font-family:monospace;">IMAP :143</span>
+        <span style="background:#1e2a3a;color:#60a5fa;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:700;font-family:monospace;">RDP &nbsp;:3389</span>
+    </div>
+    <div style="margin-top:12px;color:#334155;font-size:11px;">All detections mapped to PCI-DSS v4.0 Requirement 4.2.1 and 1.3.2</div>
+</div>
+""", unsafe_allow_html=True)
