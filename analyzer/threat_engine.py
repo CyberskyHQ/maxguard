@@ -7,7 +7,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+)
 
 SEVERITY_SCORES = {
     21:  {"score": 9, "level": "CRITICAL", "name": "FTP"},
