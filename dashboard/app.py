@@ -8,7 +8,7 @@ import sys
 import csv
 import io
 from datetime import datetime
-from dotenv import load_dotenv
+
 
 load_dotenv()
 
@@ -594,7 +594,11 @@ def render_ir_section(result):
         with st.spinner("Generating 5-step incident response plan..."):
             try:
                 from openai import OpenAI
-                client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                settings = load_settings()
+
+                client = OpenAI( 
+                    api_key=settings["api_key"]
+                )
 
                 ir_prompt = f"""You are a PCI-DSS v4.0 incident response expert for a retail environment.
 A network security scanner (Max-Guard) detected the following:
