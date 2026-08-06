@@ -1,0 +1,4 @@
+webview.create_window(
+    "MaxGuard",
+    ...
+)
