@@ -8,6 +8,9 @@ import sys
 import csv
 import io
 from datetime import datetime
+from version import VERSION, APP_NAME
+
+print(f"{APP_NAME} {VERSION}")
 
 
 load_dotenv()
