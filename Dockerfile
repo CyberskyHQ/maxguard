@@ -15,7 +15,7 @@ EXPOSE 8501
 
 ENV STREAMLIT_CLOUD=false
 
-CMD ["streamlit", "run", "dashboard/app.py", \
-     "--server.port=$PORT", \
+CMD ["sh", "-c","streamlit", "run", "dashboard/app.py", \
+     "--server.port=$${PORT}", \
      "--server.address=0.0.0.0", \
      "--server.headless=true"]
