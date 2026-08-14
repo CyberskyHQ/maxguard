@@ -8,7 +8,7 @@ import sys
 import csv
 import io
 from datetime import datetime
-
+from dotenv import load_dotenv
 VERSION = "0.8.0 Alpha"
 APP_NAME = "MaxGuard"
 
