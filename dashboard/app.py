@@ -8,7 +8,9 @@ import sys
 import csv
 import io
 from datetime import datetime
-from version import VERSION, APP_NAME
+
+VERSION = "0.8.0 Alpha"
+APP_NAME = "MaxGuard"
 
 print(f"{APP_NAME} {VERSION}")
 
